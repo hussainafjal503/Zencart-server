@@ -6,9 +6,8 @@ const passwordRegex =
 export const zSchema = z.object({
   email: z
     .string()
-    .nonempty({ message: "Email is required" }) 
+    .nonempty({ message: "Email is required" })
     .email({ message: "Invalid email address" }),
-
 
   password: z
     .string()
@@ -19,9 +18,12 @@ export const zSchema = z.object({
         "Password must include uppercase, lowercase, number and special character",
     }),
 
-
-	name: z
-      .string()
-      .nonempty("Name is required")
-      .min(3, "Name must be at least 3 characters"),
+  name: z
+    .string()
+    .nonempty("Name is required")
+    .min(3, "Name must be at least 3 characters"),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, { message: "OTP must be exactly 6 digits." }),
 });

@@ -1,13 +1,15 @@
-const responseProvider = (res, success, statusCode, message, data = {}) => {
+import { logger } from "./logger.js";
+
+const responseProvider = (res, success, status, message, data = {}) => {
   try {
-    // console.log( success, statusCode, message, data)
-    return res.status(statusCode).json({
+    logger.log(success, status, message, data);
+    return res.status(status).json({
       message,
       success,
       data,
     });
   } catch (err) {
-    console.error("error occured in response Provider :; ", err);
+    logger.error("error occured in response Provider :; ", err);
   }
 };
 
