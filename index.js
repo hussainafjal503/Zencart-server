@@ -1,40 +1,51 @@
 import express from "express";
 import dotenv from "dotenv";
-import dbConnect from "./utils/dbConnect.js";
-import ErrorHandler from "./Middleware/ErrorHandler.js";
+import dbConnect, { DBDisconnect } from "./src/utils/dbConnect.js";
+import ErrorHandler from "./src/Middleware/ErrorHandler.js";
 import cors from "cors";
 
-import userRouter from "./routes/user.Routes.js";
+import userRouter from "./src/routes/user.Routes.js";
+import { logger } from "./src/utils/logger.js";
 
 dotenv.config();
 const app = express();
 
 let PORT = process.env.PORT || 4000;
 
-await dbConnect();
-
-// ************  middleware ********************//
+// ************ Parsing middleware & cors Policy ********************//
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:3000", 
+    origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, 
+    credentials: true,
   })
 );
 
-// ************** routes *******************//
-app.use("/api/v1/user", userRouter);
+async function startSever() {
+  try {
+    await dbConnect();
 
-app.get("/", (req, res) => {
-  res.end("welcome to home page");
-});
+    // ************** routes *******************//
+    const API_VERSION = "v1";
 
-// ************   error handling middleware *****//
-app.use(ErrorHandler);
+    app.use(`/api/${API_VERSION}/user`, userRouter);
 
-app.listen(PORT, () => {
-  console.log(`server is running on ${PORT}`);
-});
+    app.get("/", (req, res) => {
+      res.end("welcome to home page");
+    });
+
+    // ************   error handling middleware *****//
+    app.use(ErrorHandler);
+
+    app.listen(PORT, () => {
+      console.log(`server is running on ${PORT}`);
+    });
+  } catch (Err) {
+    logger.error("UNABLE TO START SERVER : : ", Err);
+    DBDisconnect();
+  }
+}
+startSever();

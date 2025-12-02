@@ -1,15 +1,16 @@
-import { z } from "zod";
+import { success, z } from "zod";
 import { zSchema } from "../config/zodSchema.js";
 import userModel from "../Models/user.model.js";
 import jwt from "jsonwebtoken";
 import { logger } from "../utils/logger.js";
-import crypto from "crypto";
 import sendMail from "../utils/sendMail.js";
 import { emailVerificationLink } from "../config/mailTemplate.js";
 
 import OTPModel from "../Models/otp.model.js";
 import { generateOTP } from "../utils/otpGenerate.js";
 import { otpEmailTemplate } from "../config/otpTemplate.js";
+
+
 
 class UserService {
   async userRegister(data) {
@@ -97,14 +98,19 @@ class UserService {
 
       userDetail.isEmailVerified = true;
 
-      const payload = {
+      // const payload = {
+      //   userId: userDetail._id,
+      //   role: userDetail.role,
+      // };
+      // const accessToken = jwt.sign(payload, secret, {
+      //   expiresIn: 1 * 60 * 60 * 1000,
+      // });
+      // const refreshToken = crypto.randomBytes(20).toString("hex");
+      const { refreshToken, accessToken } = generateToken({
         userId: userDetail._id,
         role: userDetail.role,
-      };
-      const accessToken = jwt.sign(payload, secret, {
-        expiresIn: 1 * 60 * 60 * 1000,
       });
-      const refreshToken = crypto.randomBytes(20).toString("hex");
+
       userDetail.refreshToken = refreshToken;
       await userDetail.save();
 
@@ -268,15 +274,19 @@ class UserService {
         };
       }
 
-      const secret = new TextEncoder().encode(process.env.SECRET_KEY);
-      const payload = {
+      // const secret = new TextEncoder().encode(process.env.SECRET_KEY);
+      // const payload = {
+      //   userId: getUser._id,
+      //   role: getUser.role,
+      // };
+      // const accessToken = jwt.sign(payload, secret, {
+      //   expiresIn: 1 * 60 * 60 * 1000,
+      // });
+      // const refreshToken = crypto.randomBytes(20).toString("hex");
+      const { accessToken, refreshToken } = generateToken({
         userId: getUser._id,
         role: getUser.role,
-      };
-      const accessToken = jwt.sign(payload, secret, {
-        expiresIn: 1 * 60 * 60 * 1000,
       });
-      const refreshToken = crypto.randomBytes(20).toString("hex");
       getUser.refreshToken = refreshToken;
       await getUser.save();
 
@@ -377,7 +387,9 @@ class UserService {
 
       const { email } = validatedData.data;
 
-      const userData = await userModel({ deletedAt: null, email }).lean();
+      const userData = await userModel
+        .findOne({ deletedAt: null, email })
+        .lean();
 
       if (!userData) {
         return {
@@ -462,19 +474,6 @@ class UserService {
           message: "User not found.",
         };
       }
-
-      // const secret = new TextEncoder().encode(process.env.SECRET_KEY);
-      // const payload = {
-      //   userId: getUser._id,
-      //   role: getUser.role,
-      // };
-      // const accessToken = jwt.sign(payload, secret, {
-      //   expiresIn: 1 * 60 * 60 * 1000,
-      // });
-      // const refreshToken = crypto.randomBytes(20).toString("hex");
-      // getUser.refreshToken = refreshToken;
-      // await getUser.save();
-
       // removing otp after verification..
       await getOtpData.deleteOne();
       return getUser;
@@ -484,9 +483,43 @@ class UserService {
     }
   }
 
+  async updatePassword(payload) {
+    try {
+      const validationSchema = zSchema.pick({
+        email: true,
+        password: true,
+      });
 
-  async updatePassword (){
-    
+      const validatedData = validationSchema.safeParse(payload);
+
+      if (!validatedData) {
+        return {
+          success: false,
+          status: 400,
+          message: "Missing Input Fields..",
+        };
+      }
+
+      const { email, password } = validatedData.data;
+
+      const getUser = await userModel.findOne({ deletedAt: null, email });
+
+      if (!getUser) {
+        return {
+          success: false,
+          status: 400,
+          message: "User doesn't exists.",
+        };
+      }
+
+      getUser.password = password;
+      await getUser.save();
+
+      return getUser;
+    } catch (err) {
+      logger.error("ERROR OCCURED IN UPDATE PASSWORD SERVICE :: ", err);
+      throw err;
+    }
   }
 }
 

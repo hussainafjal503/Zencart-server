@@ -198,9 +198,9 @@ class UserController {
       }
       return responseProvider(
         res,
-        OTPResponse.success,
-        OTPResponse.status,
-        OTPResponse.message
+        true,
+        200,
+        "OTP Verified successfully, create Your new password."
       );
     } catch (err) {
       logger.error(
@@ -213,9 +213,29 @@ class UserController {
     }
   }
 
+  async updatePassword(req, res, next) {
+    try {
+      const updatePasswordResponse = await userService.updatePassword(req.body);
 
-   async updatePassword (){
-    
+      if (!updatePasswordResponse) {
+        return responseProvider(
+          res.updatePasswordResponse.success,
+          updatePasswordResponse.status,
+          updatePasswordResponse.message
+        );
+      }
+
+      return responseProvider(
+        res,
+        true,
+        200,
+        "Password updated Please login in.",
+        updatePasswordResponse.getUser
+      );
+    } catch (err) {
+      logger.error("ERROR OCCURED IN UPDATE PASSWORD CONTROLLER :: ", err);
+      return next(new APIError("Internal server Error Please try again.", 500));
+    }
   }
 }
 
