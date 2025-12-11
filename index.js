@@ -24,28 +24,29 @@ app.use(
   })
 );
 
+// ************** routes *******************//
+const API_VERSION = "v1";
+
+app.use(`/api/${API_VERSION}/user`, userRouter);
+
+app.get("/", (req, res) => {
+  res.end("welcome to home page");
+});
+
+// ************   error handling middleware *****//
+app.use(ErrorHandler);
+
 async function startSever() {
   try {
     await dbConnect();
-
-    // ************** routes *******************//
-    const API_VERSION = "v1";
-
-    app.use(`/api/${API_VERSION}/user`, userRouter);
-
-    app.get("/", (req, res) => {
-      res.end("welcome to home page");
-    });
-
-    // ************   error handling middleware *****//
-    app.use(ErrorHandler);
-
     app.listen(PORT, () => {
       console.log(`server is running on ${PORT}`);
     });
   } catch (Err) {
     logger.error("UNABLE TO START SERVER : : ", Err);
+  } finally {
     DBDisconnect();
   }
 }
 startSever();
+ 

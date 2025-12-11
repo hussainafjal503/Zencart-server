@@ -10,8 +10,6 @@ import OTPModel from "../Models/otp.model.js";
 import { generateOTP } from "../utils/otpGenerate.js";
 import { otpEmailTemplate } from "../config/otpTemplate.js";
 
-
-
 class UserService {
   async userRegister(data) {
     try {
@@ -53,13 +51,13 @@ class UserService {
 
       const secret = new TextEncoder().encode(process.env.SECRET_KEY);
 
-      const token = jwt.sign({ userId: response._id }, secret, {
+      const token = jwt.sign({ userId: newUser._id }, secret, {
         expiresIn: 1 * 60 * 60 * 1000,
       });
 
       await sendMail(
         "Email Verification Request",
-        response.email,
+        newUser.email,
         emailVerificationLink(
           `${process.env.FRONT_END_BASE_URL}/auth/verify-email/${token}`
         )
