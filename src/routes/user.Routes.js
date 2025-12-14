@@ -1,5 +1,6 @@
 import express from "express";
-import userController from "../controllers/userController.js";
+import userController from "../controllers/user.Controller.js";
+import { isAuthenticated } from "../Middleware/AuthenticationMiddleware.js";
 const userRouter = express.Router();
 
 userRouter.post("/auth/register", userController.registerUser);
@@ -22,5 +23,7 @@ userRouter.put(
   "/auth/update-password/new-password",
   userController.updatePassword
 );
+
+userRouter.post("/auth/logout", isAuthenticated, userController.logout);
 
 export default userRouter;

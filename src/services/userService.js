@@ -9,6 +9,7 @@ import { emailVerificationLink } from "../config/mailTemplate.js";
 import OTPModel from "../Models/otp.model.js";
 import { generateOTP } from "../utils/otpGenerate.js";
 import { otpEmailTemplate } from "../config/otpTemplate.js";
+import generateToken from "../utils/generateTokens.js";
 
 class UserService {
   async userRegister(data) {

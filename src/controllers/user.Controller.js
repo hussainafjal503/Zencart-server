@@ -2,6 +2,7 @@ import userService from "../services/userService.js";
 import responseProvider from "../utils/responseFunction.js";
 import APIError from "../utils/ErrorClass.js";
 import { logger } from "../utils/logger.js";
+import userModel from "../Models/user.model.js";
 class UserController {
   // user Registeration
   async registerUser(req, res, next) {
@@ -217,9 +218,10 @@ class UserController {
     try {
       const updatePasswordResponse = await userService.updatePassword(req.body);
 
-      if (!updatePasswordResponse) {
+      if (updatePasswordResponse.success == false) {
         return responseProvider(
-          res.updatePasswordResponse.success,
+          res,
+          updatePasswordResponse.success,
           updatePasswordResponse.status,
           updatePasswordResponse.message
         );
@@ -235,6 +237,39 @@ class UserController {
     } catch (err) {
       logger.error("ERROR OCCURED IN UPDATE PASSWORD CONTROLLER :: ", err);
       return next(new APIError("Internal server Error Please try again.", 500));
+    }
+  }
+
+  async logout(req, res, next) {
+    try {
+      const userId = req.userId;
+
+      const deletedRefresh = await userModel.findOne({ _id: userId });
+      deletedRefresh.refreshToken = "";
+      await deletedRefresh.save();
+
+      logger.log("deletedRefresh", deletedRefresh);
+
+      res
+        .clearCookie("accessToken", {
+          httpOnly: process.env.APPLICATION_ENVIRONMENT === "production",
+          secure: process.env.APPLICATION_ENVIRONMENT === "production",
+          sameSite: "lax",
+        })
+        .clearCookie("refreshToken", {
+          httpOnly: process.env.APPLICATION_ENVIRONMENT === "production",
+          secure: process.env.APPLICATION_ENVIRONMENT === "production",
+          sameSite: "strict",
+        })
+        .status(200)
+        .json({
+          success: true,
+          message: "Logged out successfully..",
+        });
+    } catch (err) {
+      logger.error("ERROR OCCURED IN LOGOUT CONTROLLER :: ", err);
+
+      return next(new APIError("Internal Server Error Please try again", 500));
     }
   }
 }

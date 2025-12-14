@@ -1,6 +1,7 @@
 import nodmailer from "nodemailer";
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
+import { logger } from "./logger.js";
+dotenv.config();
 
 const sendMail = async (subject, receiver, body) => {
   const traspoter = nodmailer.createTransport({
@@ -26,7 +27,7 @@ const sendMail = async (subject, receiver, body) => {
       success: true,
     };
   } catch (err) {
-    console.log("error occured while sending the mail :: ", err);
+    logger.error("error occured while sending the mail :: ", err);
 
     return { success: false, message: err.message };
     // throw new APIError("Internal Server Error, Unable to send Mail",500)
